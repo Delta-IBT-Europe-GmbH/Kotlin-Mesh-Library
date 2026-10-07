@@ -28,9 +28,9 @@ sealed class ModelId {
      *
      * @param prefix0x If true prefixes hex value with 0x.
      */
-    fun toHex(prefix0x: Boolean = false) = when (id and 0xFFFF0000u) {
-        0u -> "%04X".format(id.toShort())
-        else -> "%08X".format(id.toInt())
+    fun toHex(prefix0x: Boolean = false): String = when (this) {
+        is SigModelId -> "%04X".format(id.toShort())
+        is VendorModelId -> "%08X".format(id.toInt())
     }.also {
         return if (prefix0x) "0x$it" else it
     }
@@ -69,7 +69,6 @@ class SigModelId(
     @SerialName(value = "modelId")
     override val id: UInt = modelIdentifier.toUInt()
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String =
         "SigModelId(${
             modelIdentifier.toHexString(
@@ -84,9 +83,8 @@ class SigModelId(
         })"
 
     override fun equals(other: Any?): Boolean {
-        if (other !is SigModelId)
-            return false
-        return modelIdentifier == other.modelIdentifier
+        return other is SigModelId
+                && modelIdentifier == other.modelIdentifier
     }
 
     override fun hashCode(): Int {
@@ -122,7 +120,6 @@ class VendorModelId(
         companyIdentifier: UShort,
     ) : this((modelIdentifier.toUInt()) or (companyIdentifier.toUInt() shl 16))
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
         return "VendorModelId(${
                     modelIdentifier.toHexString(
@@ -149,9 +146,9 @@ class VendorModelId(
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other !is SigModelId)
-            return false
-        return modelIdentifier == other.modelIdentifier
+        return other is VendorModelId
+                && companyIdentifier == other.companyIdentifier
+                && modelIdentifier == other.modelIdentifier
     }
 
     override fun hashCode(): Int {
