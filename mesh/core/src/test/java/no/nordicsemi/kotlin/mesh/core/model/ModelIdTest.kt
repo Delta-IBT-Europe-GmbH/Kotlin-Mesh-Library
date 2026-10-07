@@ -45,13 +45,6 @@ class ModelIdTest {
     }
 
     @Test
-    fun testIdOfVendorModelIdWithCompanyZeroDiffersFromSigModelId() {
-        val vendor = VendorModelId(modelIdentifier = 0x1234u, companyIdentifier = 0x0000u)
-        val sig = SigModelId(modelIdentifier = 0x1234u)
-        assertNotEquals(illegal = sig.id, actual = vendor.id)
-    }
-
-    @Test
     fun testToHexOfVendorModelIdWithCompanyZero() {
         val vendor = VendorModelId(modelIdentifier = 0x1234u, companyIdentifier = 0x0000u)
         assertEquals(expected = "00001234", actual = vendor.toHex())

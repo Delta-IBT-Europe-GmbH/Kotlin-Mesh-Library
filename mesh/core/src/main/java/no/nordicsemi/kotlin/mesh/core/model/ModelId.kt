@@ -18,6 +18,7 @@ import no.nordicsemi.kotlin.mesh.core.model.serialization.ModelIdSerializer
  */
 @Serializable(with = ModelIdSerializer::class)
 sealed class ModelId {
+    @Deprecated("A vendor model whose Company Identifier is 0x0000 has the same id as the SIG model with the same Model Identifier. Use toHex() instead.")
     @SerialName(value = "modelId")
     abstract val id: UInt
     val isBluetoothSigAssigned: Boolean
@@ -39,17 +40,33 @@ sealed class ModelId {
 
         /**
          * Converts a [HexString] encoded model ID to a [ModelId].
+         * Expects the HexString to be encoded in big-endian.
          *
          * @return [ModelId] instance.
+         * @throws NumberFormatException if the string is not 4 or 8 hexadecimal characters.
          */
         @Throws(NumberFormatException::class)
-        fun HexString.decode(): ModelId = toUInt(radix = 16).decode()
+        fun HexString.decode(): ModelId = when (length) {
+            4 -> SigModelId(modelIdentifier = toUShort(radix = 16))
+            8 -> VendorModelId(
+                modelIdentifier = substring(startIndex = 4).toUShort(radix = 16),
+                companyIdentifier = substring(startIndex = 0, endIndex = 4).toUShort(radix = 16),
+            )
+
+            else -> throw NumberFormatException(
+                "A model ID must be 4 or 8 hexadecimal characters."
+            )
+        }
 
         /**
          * Converts a [UInt] encoded model ID to a [ModelId].
          *
          * @return [ModelId] instance.
          */
+        @Deprecated(
+            "Incorrectly decodes a vendor model whose Company Identifier is 0x0000 as a SIG model. " +
+                    "Use HexString.decode() instead."
+        )
         fun UInt.decode(): ModelId = when (this and 0xFFFF0000u) {
             0u -> SigModelId(modelIdentifier = this.toUShort())
             else -> VendorModelId(id = this)
@@ -66,6 +83,7 @@ sealed class ModelId {
 class SigModelId(
     val modelIdentifier: UShort,
 ) : ModelId() {
+    @Deprecated("A vendor model whose Company Identifier is 0x0000 has the same id as the SIG model with the same Model Identifier. Use toHex() instead.")
     @SerialName(value = "modelId")
     override val id: UInt = modelIdentifier.toUInt()
 
@@ -87,11 +105,7 @@ class SigModelId(
                 && modelIdentifier == other.modelIdentifier
     }
 
-    override fun hashCode(): Int {
-        var result = modelIdentifier.hashCode()
-        result = 31 * result + id.hashCode()
-        return result
-    }
+    override fun hashCode(): Int = modelIdentifier.hashCode()
 }
 
 /**
@@ -102,6 +116,7 @@ class SigModelId(
  */
 @Serializable
 class VendorModelId(
+    @Deprecated("A vendor model whose Company Identifier is 0x0000 has the same id as the SIG model with the same Model Identifier. Use toHex() instead.")
     @SerialName(value = "modelId")
     override val id: UInt,
 ) : ModelId() {
@@ -152,8 +167,7 @@ class VendorModelId(
     }
 
     override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + companyIdentifier.hashCode()
+        var result = 31 * companyIdentifier.hashCode()
         result = 31 * result + modelIdentifier.hashCode()
         return result
     }
