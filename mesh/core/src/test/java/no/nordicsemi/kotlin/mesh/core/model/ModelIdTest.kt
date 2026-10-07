@@ -6,11 +6,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 
-/**
- * A Vendor Model ID is a 16-bit Company Identifier followed by a 16-bit Vendor Model Identifier
- * (Mesh Protocol 3.8.2, Table 3.65). Company Identifier 0x0000 is assigned, so vendor model
- * 0x0000_1234 is distinct from SIG model 0x1234.
- */
 class ModelIdTest {
 
     @Test
